@@ -3,7 +3,10 @@ package com.example.productcrud.controller;
 import com.example.productcrud.model.Category;
 import com.example.productcrud.model.Product;
 import com.example.productcrud.service.ProductService;
+
 import java.time.LocalDate;
+
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +27,35 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public String listProducts(Model model) {
-        model.addAttribute("products", productService.findAll());
+    public String listProducts(
+            @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+            @RequestParam(value = "category", required = false) String categoryStr,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            Model model) {
+
+        // Parse category string ke enum
+        Category category = null;
+        if (categoryStr != null && !categoryStr.trim().isEmpty()) {
+            try {
+                category = Category.valueOf(categoryStr.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                category = null;
+            }
+        }
+
+        int pageSize = 10;
+
+        Page<Product> productPage = productService.searchProducts(keyword, category, page, pageSize);
+
+        model.addAttribute("products", productPage.getContent());
+        model.addAttribute("productPage", productPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", productPage.getTotalPages());
+        model.addAttribute("totalItems", productPage.getTotalElements());
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("selectedCategory", categoryStr != null ? categoryStr : "");
+        model.addAttribute("categories", Category.values());
+
         return "product/list";
     }
 

@@ -10,20 +10,49 @@
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 
-<!-- Navbar Fragment -->
-<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+<!-- Navbar Fragment dengan dropdown menu profil -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <div class="container">
         <a class="navbar-brand" th:href="@{/}">Product CRUD</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav me-auto">
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/}">Home</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/products}">Products</a>
+                </li>
+            </ul>
+
+            <!-- Dropdown menu untuk user yang sudah login -->
+            <ul class="navbar-nav" sec:authorize="isAuthenticated()">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle"
+                       href="#" id="userDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        &#128100; <span th:text="${#authentication.name}">User</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li>
+                            <a class="dropdown-item" th:href="@{/profile}">Profil Saya</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{/profile/edit}">Edit Profil</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{/profile/change-password}">Ganti Password</a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button type="submit" class="dropdown-item text-danger">Logout</button>
+                            </form>
+                        </li>
+                    </ul>
                 </li>
             </ul>
         </div>
