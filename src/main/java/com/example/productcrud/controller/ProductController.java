@@ -3,6 +3,7 @@ package com.example.productcrud.controller;
 import com.example.productcrud.model.Category;
 import com.example.productcrud.model.Product;
 import com.example.productcrud.service.ProductService;
+import com.example.productcrud.repository.CategoryRepository; // <-- Tambahan import Repository
 
 import java.time.LocalDate;
 
@@ -16,9 +17,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ProductController {
 
     private final ProductService productService;
+    private final CategoryRepository categoryRepository; // <-- Tambahan Repository
 
-    public ProductController(ProductService productService) {
+    // <-- Constructor diperbarui untuk menerima CategoryRepository
+    public ProductController(ProductService productService, CategoryRepository categoryRepository) {
         this.productService = productService;
+        this.categoryRepository = categoryRepository;
     }
 
     @GetMapping("/")
@@ -33,18 +37,18 @@ public class ProductController {
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             Model model) {
 
-        // Parse category string ke enum
+        // PERBAIKAN: Parse string ID menjadi objek Category dari database (Bukan Enum lagi)
         Category category = null;
         if (categoryStr != null && !categoryStr.trim().isEmpty()) {
             try {
-                category = Category.valueOf(categoryStr.trim().toUpperCase());
-            } catch (IllegalArgumentException e) {
+                Long categoryId = Long.parseLong(categoryStr.trim());
+                category = categoryRepository.findById(categoryId).orElse(null);
+            } catch (NumberFormatException e) {
                 category = null;
             }
         }
 
         int pageSize = 10;
-
         Page<Product> productPage = productService.searchProducts(keyword, category, page, pageSize);
 
         model.addAttribute("products", productPage.getContent());
@@ -54,7 +58,9 @@ public class ProductController {
         model.addAttribute("totalItems", productPage.getTotalElements());
         model.addAttribute("keyword", keyword);
         model.addAttribute("selectedCategory", categoryStr != null ? categoryStr : "");
-        model.addAttribute("categories", Category.values());
+
+        // PERBAIKAN: Mengambil daftar kategori dari database menggunakan findAll()
+        model.addAttribute("categories", categoryRepository.findAll());
 
         return "product/list";
     }
@@ -74,7 +80,9 @@ public class ProductController {
         Product product = new Product();
         product.setCreatedAt(LocalDate.now());
         model.addAttribute("product", product);
-        model.addAttribute("categories", Category.values());
+
+        // PERBAIKAN: Mengambil daftar kategori dari database
+        model.addAttribute("categories", categoryRepository.findAll());
         return "product/form";
     }
 
@@ -90,7 +98,9 @@ public class ProductController {
         return productService.findById(id)
                 .map(product -> {
                     model.addAttribute("product", product);
-                    model.addAttribute("categories", Category.values());
+
+                    // PERBAIKAN: Mengambil daftar kategori dari database
+                    model.addAttribute("categories", categoryRepository.findAll());
                     return "product/form";
                 })
                 .orElse("redirect:/products");

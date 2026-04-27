@@ -43,11 +43,11 @@ public class DashboardService {
                 .count();
     }
 
-    // Jumlah produk per kategori (Category enum -> nama string)
+    // Jumlah produk per kategori (Category class -> nama string)
     public Map<String, Long> getProdukPerKategori() {
         return productRepository.findAll().stream()
                 .collect(Collectors.groupingBy(
-                        p -> (p.getCategory() != null ? p.getCategory().name() : "Tanpa Kategori"),
+                        p -> (p.getCategory() != null ? p.getCategory().getName() : "Tanpa Kategori"), // <-- Perbaikan di sini
                         Collectors.counting()
                 ));
     }
