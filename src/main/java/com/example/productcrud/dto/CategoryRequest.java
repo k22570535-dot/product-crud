@@ -11,15 +11,14 @@ public class CategoryRequest {
 
     private String description;
 
-    // --- Constructor Kosong ---
     public CategoryRequest() {
     }
 
-    // --- Getters & Setters ---
     public String getName() {
         return name;
     }
 
+    // PERBAIKAN: Gunakan String, bukan Class
     public void setName(String name) {
         this.name = name;
     }
@@ -28,6 +27,7 @@ public class CategoryRequest {
         return description;
     }
 
+    // PERBAIKAN: Gunakan String, bukan Class
     public void setDescription(String description) {
         this.description = description;
     }

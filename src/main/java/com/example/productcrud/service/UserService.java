@@ -1,10 +1,11 @@
 package com.example.productcrud.service;
 
-import com.example.productcrud.repository.UserRepository;
 import com.example.productcrud.dto.EditProfileRequest;
 import com.example.productcrud.model.User;
+import com.example.productcrud.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -14,35 +15,18 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(final UserRepository userRepository, final PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
+    // --- PERBAIKAN: Tambahkan method findByUsername ---
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
-    /**
-     * Mengganti password user setelah memverifikasi password lama.
-     * @return true jika berhasil, false jika password lama tidak cocok
-     */
-    public boolean changePassword(String username, String oldPassword, String newPassword) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User tidak ditemukan: " + username));
-
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            return false;
-        }
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-        return true;
-    }
-
-    /**
-     * Memperbarui data profil user (tidak termasuk username dan password).
-     */
+    // --- PERBAIKAN: Tambahkan method updateProfile ---
+    @Transactional
     public void updateProfile(String username, EditProfileRequest request) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User tidak ditemukan: " + username));
@@ -55,5 +39,21 @@ public class UserService {
         user.setProfileImageUrl(request.getProfileImageUrl());
 
         userRepository.save(user);
+    }
+
+    @Transactional
+    public boolean changePassword(String username, String oldPassword, String newPassword) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User tidak ditemukan"));
+
+        // VALIDASI: Cek apakah password lama sesuai dengan yang ada di DB (BCrypt)
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            return false; // Password lama salah
+        }
+
+        // SIMPAN: Encode password baru sebelum disimpan
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
     }
 }

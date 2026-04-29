@@ -37,12 +37,15 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    public Page<Product> searchProducts(String keyword, Category category, int page, int size) {
-        // Jika keyword ada, bungkus dengan % untuk LIKE
+    // PERBAIKAN: Menambahkan parameter "String username" agar cocok dengan Controller
+    public Page<Product> searchProducts(String keyword, Category category, String username, int page, int size) {
         String kw = (keyword != null && !keyword.trim().isEmpty())
                 ? "%" + keyword.trim() + "%"
-                : null;
+                : "%%";
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-        return productRepository.searchProducts(kw, category, pageable);
+
+        // Meneruskan username ke Repository
+        return productRepository.searchProducts(kw, category, username, pageable);
     }
 }

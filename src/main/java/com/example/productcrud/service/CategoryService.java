@@ -3,6 +3,7 @@ package com.example.productcrud.service;
 import com.example.productcrud.dto.CategoryRequest;
 import com.example.productcrud.model.Category;
 import com.example.productcrud.repository.CategoryRepository;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,31 +19,63 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
+    // ─── QUERY LOGIC ────────────────────────────────────────────────────────
+
+    /**
+     * Mengambil semua kategori milik user beserta daftar produknya.
+     * Kita menggunakan method repository yang sudah di-custom agar tidak terjadi N+1 query.
+     */
     public List<Category> findByUsername(String username) {
-        return categoryRepository.findByUsername(username);
+        // Menggunakan filter kosong agar memanggil query JOIN FETCH produk
+        return categoryRepository.searchByUsernameAndNameWithProducts(username, "");
     }
 
-    public boolean existsByNameAndUsername(String name, String username) {
-        return categoryRepository.existsByNameAndUsername(name, username);
-    }
-
-    @Transactional
-    public void saveFromRequest(CategoryRequest request, String username) {
-        Category category = new Category();
-        category.setName(request.getName());
-        category.setDescription(request.getDescription());
-        // Asumsi model Category memiliki field username untuk menyimpan pemilik data
-        category.setUsername(username);
-        categoryRepository.save(category);
+    /**
+     * Mencari kategori berdasarkan keyword dan menampilkan produk terkait.
+     */
+    public List<Category> findByUsernameAndKeyword(String username, String keyword) {
+        String searchKeyword = (keyword != null) ? keyword.trim() : "";
+        // Selalu gunakan method WithProducts agar daftar produk muncul di UI
+        return categoryRepository.searchByUsernameAndNameWithProducts(username, searchKeyword);
     }
 
     public Optional<Category> findByIdAndUsername(Long id, String username) {
         return categoryRepository.findByIdAndUsername(id, username);
     }
 
+    // ─── VALIDATION LOGIC ────────────────────────────────────────────────────
+
+    public boolean existsByNameAndUsername(String name, String username) {
+        return categoryRepository.existsByNameAndUsername(name, username);
+    }
+
     public boolean existsByNameAndUsernameExcludingId(String name, String username, Long id) {
-        // Menggunakan method bawaan Spring Data JPA untuk mengecualikan ID tertentu
         return categoryRepository.existsByNameAndUsernameAndIdNot(name, username, id);
+    }
+
+
+    // ─── WRITE LOGIC ─────────────────────────────────────────────────────────
+
+    @Transactional
+    public void saveFromRequest(CategoryRequest request, String username) {
+        Category category = new Category();
+        // PERBAIKAN: Gunakan setName dan setDescription
+        category.setName(request.getName().trim());
+        category.setDescription(request.getDescription());
+        category.setUsername(username);
+        categoryRepository.save(category);
+    }
+
+// ... (kode selanjutnya tetap sama)
+
+    @Transactional
+    public void updateFromRequest(Long id, @Valid CategoryRequest request, String username) {
+        Category category = categoryRepository.findByIdAndUsername(id, username)
+                .orElseThrow(() -> new RuntimeException("Kategori tidak ditemukan atau akses ditolak"));
+
+        category.setName(request.getName().trim());
+        category.setDescription(request.getDescription());
+        // Hibernate dirty checking akan mengupdate database otomatis di akhir transaksi
     }
 
     @Transactional
@@ -53,6 +86,9 @@ public class CategoryService {
 
     @Transactional
     public void deleteByIdAndUsername(Long id, String username) {
+        if (!categoryRepository.existsByIdAndUsername(id, username)) {
+            throw new RuntimeException("Kategori tidak ditemukan atau akses ditolak");
+        }
         categoryRepository.deleteByIdAndUsername(id, username);
     }
 }

@@ -17,44 +17,46 @@ public class DashboardService {
         this.productRepository = productRepository;
     }
 
-    // Total jumlah semua produk
-    public long getTotalProduk() {
-        return productRepository.count();
+    // Gunakan findAll() lalu filter berdasarkan username kategori atau buat query baru di Repository
+    // Di sini saya contohkan menggunakan filter stream agar cepat
+    private List<Product> getMyProducts(String username) {
+        return productRepository.findAll().stream()
+                .filter(p -> p.getCategory() != null && username.equals(p.getCategory().getUsername()))
+                .collect(Collectors.toList());
     }
 
-    // Total nilai inventory = sum(price * stock)
-    public double getTotalNilaiInventory() {
-        return productRepository.findAll().stream()
+    public long getTotalProduk(String username) {
+        return getMyProducts(username).size();
+    }
+
+    public double getTotalNilaiInventory(String username) {
+        return getMyProducts(username).stream()
                 .mapToDouble(p -> p.getPrice() * p.getStock())
                 .sum();
     }
 
-    // Jumlah produk aktif
-    public long getTotalProdukAktif() {
-        return productRepository.findAll().stream()
+    public long getTotalProdukAktif(String username) {
+        return getMyProducts(username).stream()
                 .filter(Product::isActive)
                 .count();
     }
 
-    // Jumlah produk tidak aktif
-    public long getTotalProdukTidakAktif() {
-        return productRepository.findAll().stream()
+    public long getTotalProdukTidakAktif(String username) {
+        return getMyProducts(username).stream()
                 .filter(p -> !p.isActive())
                 .count();
     }
 
-    // Jumlah produk per kategori (Category class -> nama string)
-    public Map<String, Long> getProdukPerKategori() {
-        return productRepository.findAll().stream()
+    public Map<String, Long> getProdukPerKategori(String username) {
+        return getMyProducts(username).stream()
                 .collect(Collectors.groupingBy(
-                        p -> (p.getCategory() != null ? p.getCategory().getName() : "Tanpa Kategori"), // <-- Perbaikan di sini
+                        p -> p.getCategory().getName(),
                         Collectors.counting()
                 ));
     }
 
-    // Daftar produk low stock (stock < 5)
-    public List<Product> getLowStockProducts() {
-        return productRepository.findAll().stream()
+    public List<Product> getLowStockProducts(String username) {
+        return getMyProducts(username).stream()
                 .filter(p -> p.getStock() < 5)
                 .collect(Collectors.toList());
     }

@@ -1,73 +1,40 @@
 package com.example.productcrud.model;
 
 import jakarta.persistence.*;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "categories")
 public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String name;
-
     private String description;
-
-    // Field ini wajib ada karena Controller Anda memfilter data berdasarkan user
-    @Column(nullable = false)
     private String username;
 
-    // --- Constructor Kosong (Wajib untuk JPA) ---
-    public Category() {
-    }
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Product> products = new ArrayList<>();
 
-    // --- Getters and Setters ---
-    public Long getId() {
-        return id;
-    }
+    // --- Getter & Setter ---
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public String getUsername() { return username; }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
+    // PERBAIKAN: Isi logika set field
     public void setUsername(String username) {
         this.username = username;
     }
 
-    // --- Equals & HashCode (Opsional tapi disarankan) ---
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Category category = (Category) o;
-        return Objects.equals(id, category.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
+    public List<Product> getProducts() { return products; }
+    public void setProducts(List<Product> products) { this.products = products; }
 }

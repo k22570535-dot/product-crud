@@ -71,49 +71,37 @@ public class ProfileController {
     // POST /profile/change-password -> Proses ganti password
     @PostMapping("/profile/change-password")
     public String processChangePassword(
-            @ModelAttribute ChangePasswordRequest changePasswordRequest,
+            @ModelAttribute ChangePasswordRequest request,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
         String username = authentication.getName();
 
-        if (changePasswordRequest.getOldPassword() == null || changePasswordRequest.getOldPassword().trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Password lama tidak boleh kosong");
+        if (request.getOldPassword().isBlank() || request.getNewPassword().isBlank()) {
+            redirectAttributes.addFlashAttribute("error", "Semua field harus diisi");
             return "redirect:/profile/change-password";
         }
 
-        if (changePasswordRequest.getNewPassword() == null || changePasswordRequest.getNewPassword().trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Password baru tidak boleh kosong");
+        // 2. Validasi Konfirmasi Password Baru
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            redirectAttributes.addFlashAttribute("error", "Konfirmasi password baru tidak cocok");
             return "redirect:/profile/change-password";
         }
 
-        if (changePasswordRequest.getConfirmNewPassword() == null || changePasswordRequest.getConfirmNewPassword().trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Konfirmasi password baru tidak boleh kosong");
+        // 3. Validasi Panjang Password (Contoh minimal 8 karakter)
+        if (request.getNewPassword().length() < 8) {
+            redirectAttributes.addFlashAttribute("error", "Password baru minimal 8 karakter");
             return "redirect:/profile/change-password";
         }
 
-        if (!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getConfirmNewPassword())) {
-            redirectAttributes.addFlashAttribute("error", "Password baru dan konfirmasi password harus sama");
-            return "redirect:/profile/change-password";
-        }
-
-        if (changePasswordRequest.getOldPassword().equals(changePasswordRequest.getNewPassword())) {
-            redirectAttributes.addFlashAttribute("error", "Password baru tidak boleh sama dengan password lama");
-            return "redirect:/profile/change-password";
-        }
-
-        boolean success = userService.changePassword(
-                username,
-                changePasswordRequest.getOldPassword(),
-                changePasswordRequest.getNewPassword()
-        );
+        boolean success = userService.changePassword(username, request.getOldPassword(), request.getNewPassword());
 
         if (!success) {
-            redirectAttributes.addFlashAttribute("error", "Password lama tidak sesuai");
+            redirectAttributes.addFlashAttribute("error", "Password lama yang Anda masukkan salah");
             return "redirect:/profile/change-password";
         }
 
-        redirectAttributes.addFlashAttribute("success", "Password berhasil diubah!");
+        redirectAttributes.addFlashAttribute("success", "Password berhasil diperbarui!");
         return "redirect:/profile";
     }
 }

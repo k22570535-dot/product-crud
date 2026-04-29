@@ -1,21 +1,31 @@
 package com.example.productcrud.model;
 
+import jakarta.persistence.*;
 import java.time.LocalDate;
-
 import org.springframework.format.annotation.DateTimeFormat;
 
+@Entity
 public class Product {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
     private Category category;
+
     private long price;
     private int stock;
     private String description;
     private boolean active;
+
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate createdAt;
 
+    // --- Constructors ---
     public Product() {
     }
 
@@ -31,6 +41,7 @@ public class Product {
         this.createdAt = createdAt;
     }
 
+    // --- Getters and Setters ---
     public Long getId() {
         return id;
     }

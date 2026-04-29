@@ -7,17 +7,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
-@Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    @Query("SELECT p FROM Product p WHERE " +
-            "(:keyword IS NULL OR LOWER(p.name) LIKE LOWER(:keyword)) AND " +
-            "(:category IS NULL OR p.category = :category)")
-    Page<Product> searchProducts(
-            @Param("keyword") String keyword,
-            @Param("category") Category category,
-            Pageable pageable
-    );
+    // PERBAIKAN: Tambahkan filter p.category.username = :username agar user tidak bisa melihat produk orang lain
+    @Query("SELECT p FROM Product p WHERE p.category.username = :username " +
+            "AND LOWER(p.name) LIKE LOWER(:keyword) " +
+            "AND (:category IS NULL OR p.category = :category)")
+    Page<Product> searchProducts(@Param("keyword") String keyword,
+                                 @Param("category") Category category,
+                                 @Param("username") String username,
+                                 Pageable pageable);
 }
