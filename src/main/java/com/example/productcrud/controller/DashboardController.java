@@ -1,31 +1,28 @@
 package com.example.productcrud.controller;
 
-import com.example.productcrud.service.DashboardService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-public class kDashboardController {
-
-    private final DashboardService dashboardService;
-
-    public DashboardController(DashboardService dashboardService) {
-        this.dashboardService = dashboardService;
-    }
+public class DashboardController {
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
-        long totalProduk = dashboardService.getTotalProduk();
+    public String viewDashboard(Model model) {
 
-        model.addAttribute("totalProduk", totalProduk);
-        model.addAttribute("totalNilaiInventory", dashboardService.getTotalNilaiInventory());
-        model.addAttribute("totalAktif", dashboardService.getTotalProdukAktif());
-        model.addAttribute("totalTidakAktif", dashboardService.getTotalProdukTidakAktif());
-        model.addAttribute("produkPerKategori", dashboardService.getProdukPerKategori());
-        model.addAttribute("lowStockList", dashboardService.getLowStockProducts());
-        model.addAttribute("adaProduk", totalProduk > 0);
+        // --- Data Dummy (Contoh) untuk ditampilkan di Halaman ---
+        // Nanti ini bisa diganti dengan data dari database
+        String username = "Tim Product";
+        int totalProduct = 150;
+        int totalCategories = 10;
+        // ----------------------------------------------------
 
+        // Kirim data ke HTML menggunakan Model
+        model.addAttribute("username", username);
+        model.addAttribute("totalProduct", totalProduct);
+        model.addAttribute("totalCategories", totalCategories);
+
+        // Ini akan mencari file bernama dashboard.html di folder src/main/resources/templates
         return "dashboard";
     }
 }
